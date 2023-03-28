@@ -20,12 +20,8 @@ def get_requirements() -> list:
         ]
 
 
-if __name__ == "__main__":
-    print(get_requirements())
-
-
 setup(
-    name="sqrt-utils",
+    name="sqrt_utils",
     version=get_version("sqrt_utils"),
     description="Utils for sqrt",
     author="jinyoun",
