@@ -4,11 +4,23 @@ from slack_sdk import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
 from slack_sdk.errors import SlackApiError
 
+
 class SlackNotiBot:
     def __init__(self, channel="noti_test", sender=None):
-        env_file_path = os.path.join(os.environ.get("HOME", ""), ".env_sqrt", ".env")
-        load_dotenv(env_file_path)
+        try:
+            env_file_path = os.path.join(
+                os.environ.get("HOME", ""), ".env_sqrt", ".env"
+            )
+            load_dotenv(env_file_path)
+        except FileNotFoundError:
+            # .env file does not exist but it's okay if you have env variables set
+            pass
+
         slack_token = os.environ.get("SLACK_API_TOKEN")
+
+        if slack_token is None:
+            raise ValueError("SLACK_API_TOKEN environment variable is not set")
+
         self._channel = channel
         self._sender = sender
         self._slack_client = WebClient(token=slack_token)
@@ -39,8 +51,6 @@ class SlackNotiBot:
             response = self._slack_client.chat_postMessage(
                 channel=self._channel, text=text
             )
-            print(f"response: {response['message']['text']}")
-            print(f"text: {text}")
             assert response["message"]["text"] == text
         except SlackApiError as e:
             assert e.response["ok"] is False
@@ -50,8 +60,8 @@ class SlackNotiBot:
 
 async def async_main():
     bot = SlackNotiBot(sender="Jin")
-    await bot.send_to_slack_async("비동기적 메시징 함수")
     bot.send_to_slack("동기적 메시징 함수")
+    await bot.send_to_slack_async("비동기적 메시징 함수")
 
 
 if __name__ == "__main__":
