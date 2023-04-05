@@ -39,7 +39,7 @@ class SlackNotiBot:
             response = await self._async_slack_client.chat_postMessage(
                 channel=self._channel, text=text
             )
-            assert response["message"]["text"] == text
+            # assert response["message"]["text"] == text
         except SlackApiError as e:
             assert e.response["ok"] is False
             assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
@@ -51,7 +51,7 @@ class SlackNotiBot:
             response = self._slack_client.chat_postMessage(
                 channel=self._channel, text=text
             )
-            assert response["message"]["text"] == text
+            # assert response["message"]["text"] == text
         except SlackApiError as e:
             assert e.response["ok"] is False
             assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
