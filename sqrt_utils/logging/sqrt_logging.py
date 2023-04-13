@@ -5,72 +5,66 @@ import os
 import datetime
 
 
-LOGGING_DIR = os.environ.get("LOGGING_DIR", "/live/share/log")
+_LOGGING_DIR = os.environ.get("LOGGING_DIR", "/live/share/log")
+
+def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: str = None, logging_dir: str = _LOGGING_DIR):
+    """
+    will used for logging path : {logging_dir}/{log_type}/{logger_name}.log
+        ex) /live/share/log/DG/upbit_downloader.log
+
+    log_level: str (DEBUG, INFO)
+        If no log level is provided, set the log level through an environment variable.
+"""
+
+    logger = logging.getLogger(logger_name)
+
+    # if log_level is not given, set log_level by Environment Variables
+    if None == log_level:
+        ENVIRONMENT = os.environ.get("ENVIRONMENT")
+        if "DEVELOPMENT" == ENVIRONMENT:
+            log_level = logging.DEBUG
+        elif None == ENVIRONMENT:
+            print("Can't find ENVIRONMENT from Environment variable. Set log level to INFO")
+            log_level = logging.INFO
+        else:
+            log_level = logging.INFO
+    elif "DEBUG" == log_level.upper():
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    
+    logger.setLevel(log_level)
+
+    # Add a handler only if the logger has no handlers
+    if not logger.handlers:
+
+        if None == log_type:
+            log_type = logger_name
 
 
-class SqRTLogger:
-    def __init__(
-        self,
-        dir_name: str = "test",
-        log_file_name: str = "log",
-        max_mb: int = 10,
-        max_backup_count: int = 10,
-        logging_dir=LOGGING_DIR,
-    ):
-        log_path = os.path.join(logging_dir, dir_name)
 
-        if not os.path.exists(log_path):
-            print(f"There is no log directory: {log_path}")
-            print(f"Create log directory: {log_path}")
-            os.makedirs(log_path, exist_ok=True)
+        # make logging directory
+        if not os.path.exists(f"{logging_dir}/{log_type}"):
+            os.makedirs(f"{logging_dir}/{log_type}")
 
-        log_file_name = (
-            f"{log_file_name}_{datetime.datetime.now().strftime('%Y%m%d')}.log"
+        # add handler
+        formatter = logging.Formatter(
+            "[%(asctime)s] [%(levelname)s|%(filename)s-%(funcName)s:%(lineno)s] >> %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-        self.max_mb = max_mb
-        self.max_backup_count = max_backup_count
-        self._file_path = os.path.join(log_path, log_file_name)
+        stream_handler = logging.StreamHandler()
+        timed_rotating_handler = logging.handlers.TimedRotatingFileHandler(
+            f"{logging_dir}/{log_type}/{logger_name}.log",
+            when="D",
+            interval=1,
+            utc=True,
+        )
 
-    def get_logger(
-        self,
-        logger_name: str = None,
-        level: str = "DEBUG",
-        file_stream: bool = True,
-        console_stream: bool = True,
-    ):
-        logger = logging.getLogger(logger_name)
+        stream_handler.setFormatter(formatter)
+        timed_rotating_handler.setFormatter(formatter)
 
-        if level == "DEBUG":
-            formatter = logging.Formatter(
-                "[%(asctime)s] [%(levelname)s|%(filename)s-%(funcName)s:%(lineno)s] >> %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
-            logger_level = logging.DEBUG
-        else:
-            formatter = logging.Formatter(
-                "[%(asctime)s] [%(levelname)s] >> %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
-            if level == "INFO":
-                logger_level = logging.INFO
-            else:
-                logger_level = logging.ERROR
+        logger.addHandler(stream_handler)
+        logger.addHandler(timed_rotating_handler)
 
-        logger.setLevel(logger_level)
-
-        if file_stream:
-            file_handler = logging.handlers.RotatingFileHandler(
-                self._file_path,
-                maxBytes=self.max_mb * 1024 * 1024,
-                backupCount=self.max_backup_count,
-            )
-            file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
-
-        if console_stream:
-            stream_handler = logging.StreamHandler()
-            stream_handler.setFormatter(formatter)
-            logger.addHandler(stream_handler)
-
-        return logger
+    return logger
