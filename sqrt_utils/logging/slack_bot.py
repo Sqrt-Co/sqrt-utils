@@ -34,7 +34,9 @@ class SlackNotiBot:
 
     async def send_to_slack_async(self, text):
         try:
+            text = "\n\n\n" + "*" * 20 + text
             text = self._display_sender(text)
+            text += "*" * 20 +"\n\n\n"
             # Don't forget to have await as the client returns asyncio.Future
             response = await self._async_slack_client.chat_postMessage(
                 channel=self._channel, text=text
@@ -47,7 +49,9 @@ class SlackNotiBot:
 
     def send_to_slack(self, text):
         try:
+            text = "\n\n\n" + "*" * 20 + text
             text = self._display_sender(text)
+            text += "*" * 20 + "\n\n\n"
             response = self._slack_client.chat_postMessage(
                 channel=self._channel, text=text
             )
