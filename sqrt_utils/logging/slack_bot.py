@@ -45,9 +45,10 @@ class SlackNotiBot:
             )
             # assert response["message"]["text"] == text
         except SlackApiError as e:
-            assert e.response["ok"] is False
-            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            raise e
+            # assert e.response["ok"] is False
+            # assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            # raise e
+            pass
 
     def send_to_slack(self, text):
         try:
@@ -57,9 +58,10 @@ class SlackNotiBot:
             )
             # assert response["message"]["text"] == text
         except SlackApiError as e:
-            assert e.response["ok"] is False
-            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            raise e
+            # assert e.response["ok"] is False
+            # assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            # raise e
+            pass
 
 
 async def async_main():
