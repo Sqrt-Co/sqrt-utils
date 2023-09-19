@@ -1,11 +1,10 @@
 ### logger class for sqrt product ###
 import logging
-import logging.handlers
+from logging.handlers import TimedRotatingFileHandler
 import os
-import datetime
 
-
-_LOGGING_DIR = os.environ.get("LOGGING_DIR", "/live/share/log")
+home_directory = os.path.expanduser("~")
+_LOGGING_DIR = os.environ.get("LOGGING_DIR", f"{home_directory}/logs")
 
 def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: str = None, logging_dir: str = _LOGGING_DIR):
     """
@@ -56,8 +55,7 @@ def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: 
         stream_handler = logging.StreamHandler()
         timed_rotating_handler = logging.handlers.TimedRotatingFileHandler(
             f"{logging_dir}/{log_type}/{logger_name}.log",
-            when="D",
-            interval=1,
+            when="midnight",
             utc=True,
         )
 
