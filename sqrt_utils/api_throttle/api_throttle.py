@@ -16,30 +16,31 @@ class APIThrottle:
         self.limit = api_limit
         self.interval = interval
         self.logger = logger
-        self.jobs = {}  # (job_hash, start_time) -> end_time
+        self.jobs = {}  # (job_hash, start_time, weight) -> end_time
 
-    async def insert_job(self, job_hash):
+    async def insert_job(self, job_hash, weight) -> tuple:
         self.flush_old_jobs()
 
         if self.logger is not None:
             self.logger.info(
-                f"{self.__class__.__name__} - {len(self.jobs)} jobs in throttle ~ {self.limit} per {self.interval}s"
+                f"{self.__class__.__name__} - {sum([i[2] for i in self.jobs.keys()])} "
+                f"weights using in throttle ~ {self.limit} per {self.interval}s"
             )
 
-        while not self.okay_to_insert():
+        while not self.okay_to_insert(weight):
             await asyncio.sleep(0.01)
             self.flush_old_jobs()
 
         st = time.time()
-        self.jobs[(job_hash, st)] = -1  # -1 means the job is not done yet
+        self.jobs[(job_hash, st, weight)] = -1
 
-        return job_hash, st
+        return job_hash, st, weight
 
-    def job_done(self, job_hash, st):
-        self.jobs[(job_hash, st)] = time.time()
+    def job_done(self, job_hash, st, weight):
+        self.jobs[(job_hash, st, weight)] = time.time()
 
-    def okay_to_insert(self) -> bool:
-        if len(self.jobs) < self.limit:
+    def okay_to_insert(self, weight) -> bool:
+        if sum([i[2] for i in self.jobs.keys()]) <= self.limit - weight:
             return True
         else:
             return False
@@ -54,11 +55,11 @@ class APIThrottle:
         }
 
 
-def throttling(throttle: APIThrottle):
+def throttling(throttle: APIThrottle, weight: int = 1):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             start_info = await throttle.insert_job(
-                f"{str(func)}{str(args)}{str(kwargs)}"
+                job_hash=f"{str(func)}{str(args)}{str(kwargs)}", weight=weight
             )
 
             try:
