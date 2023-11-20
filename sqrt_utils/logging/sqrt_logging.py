@@ -6,14 +6,20 @@ import os
 home_directory = os.path.expanduser("~")
 _LOGGING_DIR = os.environ.get("LOGGING_DIR", f"{home_directory}/logs")
 
-def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: str = None, logging_dir: str = _LOGGING_DIR):
+
+def get_sqrt_logger(
+    logger_name: str = "test",
+    log_type: str = None,
+    log_level: str = None,
+    logging_dir: str = _LOGGING_DIR,
+):
     """
     will used for logging path : {logging_dir}/{log_type}/{logger_name}.log
         ex) /live/share/log/DG/upbit_downloader.log
 
     log_level: str (DEBUG, INFO)
         If no log level is provided, set the log level through an environment variable.
-"""
+    """
 
     logger = logging.getLogger(logger_name)
 
@@ -23,7 +29,9 @@ def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: 
         if "DEVELOPMENT" == ENVIRONMENT:
             log_level = logging.DEBUG
         elif None == ENVIRONMENT:
-            print("Can't find ENVIRONMENT from Environment variable. Set log level to INFO")
+            print(
+                "Can't find ENVIRONMENT from Environment variable. Set log level to INFO"
+            )
             log_level = logging.INFO
         else:
             log_level = logging.INFO
@@ -31,16 +39,13 @@ def get_sqrt_logger(logger_name: str = "test", log_type: str = None, log_level: 
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    
+
     logger.setLevel(log_level)
 
     # Add a handler only if the logger has no handlers
     if not logger.handlers:
-
         if None == log_type:
             log_type = logger_name
-
-
 
         # make logging directory
         if not os.path.exists(f"{logging_dir}/{log_type}"):
